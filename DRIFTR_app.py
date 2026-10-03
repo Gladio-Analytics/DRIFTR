@@ -116,9 +116,16 @@ def _cached_fig(key, builder):
 if "active_ticker" not in st.session_state:
     st.session_state.active_ticker = None
 
-ticker_input = st.text_input("Ticker", value="", placeholder="e.g. MSFT, JNJ, GS").strip().upper()
+ticker_input = st.text_input("Ticker", value="", placeholder="One ticker, e.g. MSFT").strip().upper()
 if st.button("Get Stock Data", type="primary") and ticker_input:
-    st.session_state.active_ticker = ticker_input
+    # The old placeholder ("e.g. MSFT, JNJ, GS") read like an instruction to
+    # enter several comma-separated tickers rather than three separate
+    # examples — guard against that literally being typed in and sent to
+    # yfinance as one (invalid) symbol, which just produces a cryptic 404.
+    if any(c in ticker_input for c in (",", " ", ";")):
+        st.error("Please enter a single ticker (e.g. 'MSFT'), not multiple tickers.")
+    else:
+        st.session_state.active_ticker = ticker_input
 
 ticker = st.session_state.active_ticker
 
